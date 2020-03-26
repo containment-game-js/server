@@ -1,0 +1,21 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "license": "MIT",
+  "authors": [
+    "Guillaume Hivert <hivert.is.coming@gmail.com>",
+    "Arthur Escriou <arthurescriou@gmail.com>"
+  ],
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "faker": "^4.1.0",
+    "socket.io": "^2.3.0",
+    "socket.io-p2p-server": "^1.2.0",
+    "uuid": "^7.0.2"
+  }
+}
