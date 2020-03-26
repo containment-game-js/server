@@ -6,7 +6,7 @@ const io = require('socket.io')(server)
 const faker = require('faker')
 
 app.get('/', function(req, res) {
-  res.send({roomCreated, upDate, rooms: roomsToString()})
+  res.send({roomCreated, socketConnected, upDate, rooms: roomsToString()})
 })
 io.use(p2p)
 
@@ -14,7 +14,8 @@ const rooms = {}
 const names = {}
 
 let roomCreated = 0
-const upDate = Date.new()
+let socketConnected = 0
+const upDate = new Date(Date.now()).toString()
 
 const setName = ({socket, name}) => {
   names[socket.id] = name
@@ -22,11 +23,11 @@ const setName = ({socket, name}) => {
 
 const getName = ({socket}) => names[socket.id]
 
-const roomsToString = () => JSON.stringify(Object.values(rooms).map((room) => ({
+const roomsToString = () => Object.values(rooms).map((room) => ({
   ...room,
   host: room.host.id,
   players: room.players.map((player) => ({name: player.name}))
-})))
+}))
 
 const createRoom = ({socket, io}) => (name) => {
   try {
@@ -136,6 +137,7 @@ const dispatchRooms = (socket) => socket.emit('rooms', Object.values(rooms).map(
 // }
 
 io.on('connection', function(socket) {
+  socketConnected++
   dispatchRooms(socket)
 
   socket.on('action', console.log)
