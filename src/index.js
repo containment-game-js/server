@@ -6,12 +6,15 @@ const io = require('socket.io')(server)
 const faker = require('faker')
 
 app.get('/', function(req, res) {
-  res.send(roomsToString())
+  res.send({roomCreated, upDate, rooms: roomsToString()})
 })
 io.use(p2p)
 
 const rooms = {}
 const names = {}
+
+let roomCreated = 0
+const upDate = Date.new()
 
 const setName = ({socket, name}) => {
   names[socket.id] = name
@@ -48,6 +51,7 @@ const createRoom = ({socket, io}) => (name) => {
 
     userChanged({rid, io})
     dispatchRooms(io)
+    roomCreated++
   } catch (e) {
     console.error(e)
   }
