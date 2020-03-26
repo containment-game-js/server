@@ -166,6 +166,6 @@ io.on('connection', function (socket) {
   })
 })
 
-server.listen(3030, function () {
-  console.log('Listening on 3030')
+server.listen(process.env.PORT, function () {
+  console.log(`Listening on ${process.env.PORT}`)
 })
