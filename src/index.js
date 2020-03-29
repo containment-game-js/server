@@ -19,17 +19,21 @@ const upDate = new Date(Date.now()).toString()
 
 const setName = ({socket, name}) => {
   names[socket.id] = name
+
+const roomsToString = () => {
+  return Object.values(rooms)
+    .filter(room => !room.privateRoom)
+    .map(room => ({
+      ...room,
+      host: room.host.id,
+      players: room.players.map(player => ({ name: player.name })),
+    }))
 }
 
 const getName = ({socket}) => names[socket.id]
 
-const roomsToString = () => Object.values(rooms).map((room) => ({
-  ...room,
-  host: room.host.id,
-  players: room.players.map((player) => ({name: player.name}))
-}))
 
-const createRoom = ({socket, io}) => (name) => {
+const createRoom = ({ socket, io }) => ({ name, privateRoom }) => {
   try {
     setName({socket, name})
     const rid = uuidv4()
@@ -38,6 +42,7 @@ const createRoom = ({socket, io}) => (name) => {
       id: rid,
       host: socket,
       name: roomName,
+      privateRoom,
       players: [
         {
           socket,
@@ -47,7 +52,7 @@ const createRoom = ({socket, io}) => (name) => {
     }
     console.log(`Create room ${rid}`)
     socket.join(rid)
-    socket.emit('create-room', rid)
+    socket.emit('created-room', rid)
     io.to(rid).emit('go-private')
 
     userChanged({rid, io})
@@ -122,13 +127,28 @@ const userChanged = ({rid, io}) => {
     console.log(users)
     io.to(rid).emit('users', users)
   }
+const dispatchRooms = socket => {
+  const payload = Object.values(rooms).map(room => {
+    const host = room.host.id
+    const players = room.players.map(({ name }) => ({ name }))
+    return { ...room, host, players }
+  })
+  socket.emit('rooms', payload)
 }
 
-const dispatchRooms = (socket) => socket.emit('rooms', Object.values(rooms).map((room) => ({
-  ...room,
-  host: room.host.id,
-  players: room.players.map((player) => ({name: player.name}))
-})))
+const getRoomInfo = ({ socket, io }) => ({ rid }) => {
+  const room = rooms[rid]
+  if (room) {
+    const players = room.players.map(({ name, socket }) => {
+      const { id } = socket
+      return { name, id }
+    })
+    const payload = { ...room, players, host: room.host.id }
+    socket.emit('room-info', payload)
+  } else {
+    socket.emit('no-room', { rid })
+  }
+}
 
 // const playersChanged = ({rid, io}) => {
 //   if (rooms[rid]) {
@@ -151,6 +171,7 @@ io.on('connection', function(socket) {
   socket.on('get-rooms', () => dispatchRooms(socket))
 
   socket.on('disconnect', leaveRoom({socket, io}))
+  socket.on('get-room-info', getRoomInfo({ socket, io }))
 
   // socket.on('peer-msg', function(data) {
   //   console.log('Message from peer: %s', data);
