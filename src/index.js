@@ -19,6 +19,7 @@ const upDate = new Date(Date.now()).toString()
 
 const setName = ({socket, name}) => {
   names[socket.id] = name
+}
 
 const roomsToString = () => {
   return Object.values(rooms)
@@ -127,6 +128,8 @@ const userChanged = ({rid, io}) => {
     console.log(users)
     io.to(rid).emit('users', users)
   }
+}
+
 const dispatchRooms = socket => {
   const payload = Object.values(rooms).map(room => {
     const host = room.host.id
