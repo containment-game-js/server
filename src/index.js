@@ -4,6 +4,9 @@ const p2p = require('socket.io-p2p-server').Server
 const uuidv4 = require('uuid').v4
 const io = require('socket.io')(server)
 const faker = require('faker')
+const cors = require('cors')
+
+app.use(cors())
 
 app.get('/', function (req, res) {
   res.send({ roomCreated, socketConnected, upDate, rooms: roomsToString() })
