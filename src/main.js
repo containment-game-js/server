@@ -103,9 +103,11 @@ const broadcastAction = ({ id, rid, action }) => {
 const broadcastState = ({ id, rid, state }) => {
   if (helpers.validateUUID(id)) {
     const room = Rooms.get(rid)
-    const host = Rooms.getPlayer(room, id)
-    if (room && host) {
-      io.to(rid).emit('state', { state })
+    if (room.host === id) {
+      const host = Rooms.getPlayer(room, id)
+      if (room && host) {
+        io.to(rid).emit('state', { state })
+      }
     }
   }
 }
