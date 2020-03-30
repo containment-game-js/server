@@ -1,15 +1,15 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "main": "src/index.js",
+  "main": "src/main.js",
   "license": "MIT",
   "authors": [
     "Guillaume Hivert <hivert.is.coming@gmail.com>",
     "Arthur Escriou <arthurescriou@gmail.com>"
   ],
   "scripts": {
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "dev": "nodemon src/main.js",
+    "start": "node src/main.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
