@@ -5,9 +5,10 @@ const uuidv4 = require('uuid').v4
 const io = require('socket.io')(server)
 const faker = require('faker')
 
-app.get('/', function(req, res) {
-  res.send({roomCreated, socketConnected, upDate, rooms: roomsToString()})
+app.get('/', function (req, res) {
+  res.send({ roomCreated, socketConnected, upDate, rooms: roomsToString() })
 })
+
 io.use(p2p)
 
 const rooms = {}
@@ -17,7 +18,7 @@ let roomCreated = 0
 let socketConnected = 0
 const upDate = new Date(Date.now()).toString()
 
-const setName = ({socket, name}) => {
+const setName = ({ socket, name }) => {
   names[socket.id] = name
 }
 
@@ -31,12 +32,11 @@ const roomsToString = () => {
     }))
 }
 
-const getName = ({socket}) => names[socket.id]
-
+const getName = ({ socket }) => names[socket.id]
 
 const createRoom = ({ socket, io }) => ({ name, privateRoom }) => {
   try {
-    setName({socket, name})
+    setName({ socket, name })
     const rid = uuidv4()
     const roomName = faker.hacker.noun()
     rooms[rid] = {
@@ -47,16 +47,16 @@ const createRoom = ({ socket, io }) => ({ name, privateRoom }) => {
       players: [
         {
           socket,
-          name
-        }
-      ]
+          name,
+        },
+      ],
     }
     console.log(`Create room ${rid}`)
     socket.join(rid)
     socket.emit('created-room', rid)
     io.to(rid).emit('go-private')
 
-    userChanged({rid, io})
+    userChanged({ rid, io })
     dispatchRooms(io)
     roomCreated++
   } catch (e) {
@@ -64,16 +64,16 @@ const createRoom = ({ socket, io }) => ({ name, privateRoom }) => {
   }
 }
 
-const enterRoom = ({socket, io}) => ({rid, name}) => {
+const enterRoom = ({ socket, io }) => ({ rid, name }) => {
   try {
-    setName({socket, name})
-    if (!rooms[rid].players.find((p) => p.socket === socket)) {
-      rooms[rid].players.push({socket, name})
+    setName({ socket, name })
+    if (!rooms[rid].players.find(p => p.socket === socket)) {
+      rooms[rid].players.push({ socket, name })
       socket.join(rid)
       console.log('emit to room', rid)
       io.to(rid).emit('go-private')
 
-      userChanged({rid, io})
+      userChanged({ rid, io })
       dispatchRooms(io)
     }
   } catch (e) {
@@ -81,35 +81,35 @@ const enterRoom = ({socket, io}) => ({rid, name}) => {
   }
 }
 
-const leaveRoom = ({socket, io}) => ({name, rid}) => {
+const leaveRoom = ({ socket, io }) => ({ name, rid }) => {
   try {
     if (rid) {
-      if (rooms[rid] && rooms[rid].players.find((p) => p.socket === socket)) {
-        rooms[rid].players = rooms[rid].players.filter((p) => p.socket !== socket)
+      if (rooms[rid] && rooms[rid].players.find(p => p.socket === socket)) {
+        rooms[rid].players = rooms[rid].players.filter(p => p.socket !== socket)
         if (rooms[rid].host === socket) {
           delete rooms[rid]
         }
         console.log('leave to room', rid)
         socket.leave(rid)
         dispatchRooms(io)
-        userChanged({rid, io})
+        userChanged({ rid, io })
       }
     } else {
       let changed = false
-      Object.values(rooms).forEach((room) => {
-        if (room.players.find((p) => p.socket === socket)) {
+      Object.values(rooms).forEach(room => {
+        if (room.players.find(p => p.socket === socket)) {
           changed = true
-          room.players = room.players.filter((p) => p.socket !== socket)
+          room.players = room.players.filter(p => p.socket !== socket)
           if (room.host === socket) {
-            console.log('leave to room', getName({socket}), room.id)
+            console.log('leave to room', getName({ socket }), room.id)
             socket.leave(room.id)
             delete rooms[room.id]
-            userChanged({rid: room.id, io})
+            userChanged({ rid: room.id, io })
           }
         }
       })
       if (changed) {
-        userChanged({rid, io})
+        userChanged({ rid, io })
         dispatchRooms(io)
       }
     }
@@ -118,12 +118,12 @@ const leaveRoom = ({socket, io}) => ({name, rid}) => {
   }
 }
 
-const userChanged = ({rid, io}) => {
+const userChanged = ({ rid, io }) => {
   if (rooms[rid]) {
-    const users = rooms[rid].players.map((player) => ({
+    const users = rooms[rid].players.map(player => ({
       ...player,
       socket: null,
-      id: player.socket.id
+      id: player.socket.id,
     }))
     console.log(users)
     io.to(rid).emit('users', users)
@@ -159,38 +159,20 @@ const getRoomInfo = ({ socket, io }) => ({ rid }) => {
 //   }
 // }
 
-io.on('connection', function(socket) {
+io.on('connection', socket => {
   socketConnected++
   dispatchRooms(socket)
 
   socket.on('action', console.log)
-
-  socket.on('enter-room', enterRoom({socket, io}))
-
-  socket.on('create-room', createRoom({socket, io}))
-
-  socket.on('leave-room', leaveRoom({socket, io}))
-
-  socket.on('get-rooms', () => dispatchRooms(socket))
-
-  socket.on('disconnect', leaveRoom({socket, io}))
+  socket.on('enter-room', enterRoom({ socket, io }))
+  socket.on('create-room', createRoom({ socket, io }))
+  socket.on('leave-room', leaveRoom({ socket, io }))
+  socket.on('disconnect', leaveRoom({ socket, io }))
   socket.on('get-room-info', getRoomInfo({ socket, io }))
-
-  // socket.on('peer-msg', function(data) {
-  //   console.log('Message from peer: %s', data);
-  //   socket.broadcast.emit('peer-msg', data);
-  // })
-  //
-  socket.on('go-private', function(data) {
-    console.log('private')
-    socket.broadcast.emit('go-private', data)
-  })
 })
 
-let port = process.env.PORT
-  ? process.env.PORT
-  : 3030
+let port = process.env.PORT ? process.env.PORT : 3030
 
-server.listen(port, function() {
+server.listen(port, function () {
   console.log(`Listening on ${port}`)
 })
