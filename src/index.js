@@ -9,6 +9,9 @@ const Rooms = require('./Rooms')
 const Users = require('./Users')
 
 app.use(cors())
+io.use(p2p)
+
+const upDate = new Date().toString()
 
 app.get('/', (req, res) => {
   const numberOfRooms = Rooms.length()
@@ -31,10 +34,6 @@ app.get('/get-room-info/:rid', (req, res) => {
     res.end()
   }
 })
-
-io.use(p2p)
-
-const upDate = new Date(Date.now()).toString()
 
 const createRoom = ({ socket, io }) => ({ name, id, privateRoom }) => {
   Users.set({ socket, id, name })
