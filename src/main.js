@@ -100,12 +100,23 @@ const broadcastAction = ({ id, rid, action }) => {
   }
 }
 
+const broadcastState = ({ id, rid, state }) => {
+  if (helpers.validateUUID(id)) {
+    const room = Rooms.get(rid)
+    const host = Rooms.getPlayer(room, id)
+    if (room && host) {
+      io.to(rid).emit('state', { state })
+    }
+  }
+}
+
 io.on('connection', socket => {
   console.log('connected')
   socket.on('enter-room', enterRoom({ socket, io }))
   socket.on('create-room', createRoom({ socket, io }))
   socket.on('leave-room', leaveRoom({ socket, io }))
   socket.on('action', broadcastAction)
+  socket.on('state', broadcastState)
 })
 
 const port = process.env.PORT || 3030
