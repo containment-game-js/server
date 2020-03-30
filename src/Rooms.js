@@ -9,9 +9,11 @@ const length = () => {
 }
 
 const roomToSerializable = room => {
-  const host = room.host.id
-  const players = room.players.map(({ name }) => ({ name }))
-  return { ...room, host, players }
+  const players = room.players.map(({ name, id, socket }) => {
+    const socketId = socket.id
+    return { name, id, socketId }
+  })
+  return { ...room, players }
 }
 
 const toSerializable = () => {
@@ -50,6 +52,15 @@ const getPlayer = (room, id) => {
   }
 }
 
+const addPlayer = (room, player) => {
+  const user = getPlayer(room, player.id)
+  if (user) {
+    user.socket = player.socket
+  } else {
+    room.players.push(player)
+  }
+}
+
 module.exports = {
   all,
   set,
@@ -61,4 +72,5 @@ module.exports = {
   toSerializable,
   roomToSerializable,
   getPlayer,
+  addPlayer,
 }
