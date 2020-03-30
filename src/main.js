@@ -127,6 +127,18 @@ const broadcastAction = ({ id, rid, action }) => {
   }
 }
 
+const broadcastState = ({ id, rid, state }) => {
+  if (helpers.validateUUID(id)) {
+    const room = Rooms.get(rid)
+    if (room.host === id) {
+      const host = Rooms.getPlayer(room, id)
+      if (room && host) {
+        io.to(rid).emit('state', { state })
+      }
+    }
+  }
+}
+
 io.on('connection', socket => {
   logInfo.socketConnect({ sid: socket.id })
   socket.on('enter-room', enterRoom({ socket, io }))
@@ -135,6 +147,7 @@ io.on('connection', socket => {
   socket.on('action', broadcastAction)
   socket.on('dashboard', logInfo.sendDataToDashboard({ socket }))
   socket.on('disconnect', () => logInfo.socketDisconnect({ sid: socket.id }))
+  socket.on('state', broadcastState)
 })
 
 const port = process.env.PORT || 3030
