@@ -16,11 +16,17 @@
     "express": "^4.17.1",
     "faker": "^4.1.0",
     "socket.io": "^2.3.0",
-    "socket.io-p2p-server": "^1.2.0",
     "uuid": "^7.0.2"
   },
   "devDependencies": {
     "eslint": "^6.8.0",
-    "prettier": "^2.0.2"
+    "husky": "^4.2.3",
+    "prettier": "^2.0.2",
+    "pretty-quick": "^2.0.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
   }
 }
