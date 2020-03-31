@@ -115,7 +115,7 @@ const broadcastAction = ({ id, rid, action }) => {
   }
 }
 
-const broadcastState = ({ id, rid, state }) => {
+const broadcastState = ({ id, to, rid, state }) => {
   if (helpers.validateUUID(id)) {
     const room = Rooms.get(rid)
     if (action === 'start') {
@@ -133,7 +133,12 @@ const broadcastState = ({ id, rid, state }) => {
     if (room.host === id) {
       const host = Rooms.getPlayer(room, id)
       if (room && host) {
-        io.to(rid).emit('state', { state })
+        if (to) {
+          const receiver = Rooms.getPlayer(room, to)
+          receiver.socket.emit('state', { state })
+        } else {
+          io.to(rid).emit('state', { state })
+        }
       }
     }
   }
