@@ -7,6 +7,12 @@ const cors = require('cors')
 const Rooms = require('./Rooms')
 const Users = require('./Users')
 const helpers = require('./helpers')
+const logInfo = require('./dashboard')
+
+const nolog = process.env.NOLOG
+if (!nolog) {
+  logInfo.start()
+}
 
 app.use(cors())
 
@@ -44,12 +50,19 @@ const createRoom = ({ socket, io }) => ({ name, id, privateRoom }) => {
       host: id,
       name: roomName,
       privateRoom,
-      players: [{ socket, id, name }],
+      players: [
+        {
+          socket,
+          id,
+          name,
+        },
+      ],
     })
     console.log(`Create room ${rid}`)
     socket.join(rid)
     socket.emit('created-room', rid)
     userChanged({ rid, io })
+    logInfo.createRoom({ sid: socket.id, rid })
   }
 }
 
@@ -60,6 +73,7 @@ const enterRoom = ({ socket, io }) => ({ rid, id, name }) => {
     if (room) {
       Rooms.addPlayer(room, { socket, id, name })
       socket.join(rid)
+      logInfo.createRoom({ rid, sid: socket.id })
     }
     userChanged({ rid, io })
   }
@@ -76,6 +90,7 @@ const leaveRoom = ({ socket, io }) => ({ name, id, rid }) => {
       console.log('leave to room', rid)
       socket.leave(rid)
       userChanged({ rid, io })
+      logInfo.leaveRoom({ rid, sid: socket.id })
     }
   }
 }
@@ -91,6 +106,18 @@ const userChanged = ({ rid, io }) => {
 
 const broadcastAction = ({ id, rid, action }) => {
   if (helpers.validateUUID(id)) {
+    if (action === 'start') {
+      logInfo.startGame({
+        rid,
+        sids: io.sockets.clients(rid).map(s => s.id),
+      })
+    }
+    if (action === 'end') {
+      logInfo.endGame({
+        rid,
+        sids: io.sockets.clients(rid).map(s => s.id),
+      })
+    }
     const room = Rooms.get(rid)
     const player = Rooms.getPlayer(room, id)
     const host = Rooms.getPlayer(room, room.host)
@@ -118,11 +145,13 @@ const broadcastState = ({ id, to, rid, state }) => {
 }
 
 io.on('connection', socket => {
-  console.log('connected')
+  logInfo.socketConnect({ sid: socket.id })
   socket.on('enter-room', enterRoom({ socket, io }))
   socket.on('create-room', createRoom({ socket, io }))
   socket.on('leave-room', leaveRoom({ socket, io }))
   socket.on('action', broadcastAction)
+  socket.on('dashboard', logInfo.sendDataToDashboard({ socket }))
+  socket.on('disconnect', () => logInfo.socketDisconnect({ sid: socket.id }))
   socket.on('state', broadcastState)
 })
 
