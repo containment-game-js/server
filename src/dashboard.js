@@ -86,8 +86,7 @@ const endGame = ({ rid, sids }) => {
   updateRoom({ rid })
 }
 
-const sendDataToDashboard = ({ socket }) => () => {
-  console.log('dashboard')
+const sendDataToDashboard = ({ socket, io }) => () => {
   const interval = setInterval(() => {
     socket.emit('info', getStats())
   }, 1000)
