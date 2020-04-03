@@ -118,27 +118,25 @@ const broadcastAction = ({ id, rid, action }) => {
 const broadcastState = ({ id, to, rid, state }) => {
   if (helpers.validateUUID(id)) {
     const room = Rooms.get(rid)
-    if (action === 'start') {
-      logInfo.startGame({
-        rid,
-        sids: io.sockets.clients(rid).map(s => s.id),
-      })
-    }
-    if (action === 'end') {
-      logInfo.endGame({
-        rid,
-        sids: io.sockets.clients(rid).map(s => s.id),
-      })
-    }
-    if (room.host === id) {
-      const host = Rooms.getPlayer(room, id)
-      if (room && host) {
-        if (to) {
-          const receiver = Rooms.getPlayer(room, to)
-          receiver.socket.emit('state', { state })
-        } else {
-          io.to(rid).emit('state', { state })
-        }
+    const host = Rooms.getPlayer(room, id)
+    if (room && host && room.host === id) {
+      if (action === 'start') {
+        logInfo.startGame({
+          rid,
+          sids: io.sockets.clients(rid).map(s => s.id),
+        })
+      }
+      if (action === 'end') {
+        logInfo.endGame({
+          rid,
+          sids: io.sockets.clients(rid).map(s => s.id),
+        })
+      }
+      if (to) {
+        const receiver = Rooms.getPlayer(room, to)
+        receiver.socket.emit('state', { state })
+      } else {
+        io.to(rid).emit('state', { state })
       }
     }
   }
