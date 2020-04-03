@@ -120,13 +120,13 @@ const broadcastState = ({ id, to, rid, state }) => {
     const room = Rooms.get(rid)
     const host = Rooms.getPlayer(room, id)
     if (room && host && room.host === id) {
-      if (action === 'start') {
+      if (state === 'start') {
         logInfo.startGame({
           rid,
           sids: io.sockets.clients(rid).map(s => s.id),
         })
       }
-      if (action === 'end') {
+      if (state === 'end') {
         logInfo.endGame({
           rid,
           sids: io.sockets.clients(rid).map(s => s.id),
