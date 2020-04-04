@@ -54,7 +54,6 @@ const createRoom = ({ socket, io }) => ({ name, id, privateRoom }) => {
       privateRoom,
       players,
     })
-    console.log(`Create room ${rid}`)
     socket.join(rid)
     socket.emit('created-room', rid)
     userChanged({ rid, io })
@@ -179,7 +178,6 @@ const disconnectUser = ({ socket, io }) => () => {
 }
 
 io.on('connection', socket => {
-  console.log('connect with socket', socket.id)
   logInfo.socketConnect({ sid: socket.id })
   socket.on('enter-room', enterRoom({ socket, io }))
   socket.on('create-room', createRoom({ socket, io }))
