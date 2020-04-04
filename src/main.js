@@ -106,18 +106,6 @@ const userChanged = ({ rid, io }) => {
 
 const broadcastAction = ({ id, rid, action }) => {
   if (helpers.validateUUID(id)) {
-    if (action === 'start') {
-      logInfo.startGame({
-        rid,
-        sids: io.sockets.clients(rid).map(s => s.id),
-      })
-    }
-    if (action === 'end') {
-      logInfo.endGame({
-        rid,
-        sids: io.sockets.clients(rid).map(s => s.id),
-      })
-    }
     const room = Rooms.get(rid)
     const player = Rooms.getPlayer(room, id)
     if (room && player) {
@@ -134,6 +122,18 @@ const broadcastState = ({ id, to, rid, state }) => {
     const room = Rooms.get(rid)
     const host = Rooms.getPlayer(room, id)
     if (room && host && room.host === id) {
+      if (state === 'start') {
+        logInfo.startGame({
+          rid,
+          sids: io.sockets.clients(rid).map(s => s.id),
+        })
+      }
+      if (state === 'end') {
+        logInfo.endGame({
+          rid,
+          sids: io.sockets.clients(rid).map(s => s.id),
+        })
+      }
       if (to) {
         const receiver = Rooms.getPlayer(room, to)
         receiver.socket.emit('state', { state })
