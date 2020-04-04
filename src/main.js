@@ -43,8 +43,8 @@ app.get('/get-room-info/:rid', (req, res) => {
 
 const createRoom = ({ socket, io }) => ({ name, id, privateRoom }) => {
   if (helpers.validateUUID(id)) {
-    Users.set({ socket, id, name })
     const rid = uuidv4()
+    Users.append({ socket, id, name, rooms: [rid] })
     const roomName = faker.hacker.noun()
     const players = [{ socket, id, name }]
     Rooms.set(rid, {
@@ -64,7 +64,8 @@ const createRoom = ({ socket, io }) => ({ name, id, privateRoom }) => {
 
 const enterRoom = ({ socket, io }) => ({ rid, id, name }) => {
   if (helpers.validateUUID(id)) {
-    Users.set({ socket, id, name })
+    Users.append({ socket, id, name, rooms: [rid] })
+    Users.removeCanceller(id)
     const room = Rooms.get(rid)
     if (room) {
       Rooms.addPlayer(room, { socket, id, name })
@@ -75,15 +76,16 @@ const enterRoom = ({ socket, io }) => ({ rid, id, name }) => {
   }
 }
 
-const leaveRoom = ({ socket, io }) => ({ name, id, rid }) => {
+const leaveRoom = ({ socket, io }) => ({ id, rid }) => {
   if (helpers.validateUUID(id)) {
     const room = Rooms.get(rid)
     const player = Rooms.getPlayer(room, id)
     if (room && player) {
+      Rooms.removePlayer(room, player)
+      Users.removeFromRoom(id, rid)
       if (room.host === id) {
-        Rooms.unset(rid)
+        Rooms.newHost(room)
       }
-      console.log('leave to room', rid)
       socket.leave(rid)
       userChanged({ rid, io })
       logInfo.leaveRoom({ rid, sid: socket.id })
@@ -95,7 +97,6 @@ const userChanged = ({ rid, io }) => {
   const room = Rooms.get(rid)
   if (room) {
     const { players } = Rooms.roomToSerializable(room)
-    console.log(players)
     io.to(rid).emit('users', players)
   }
 }
@@ -136,14 +137,56 @@ const broadcastState = ({ id, to, rid, state }) => {
   }
 }
 
+const kick = ({ socket, io }) => ({ id, rid, kid }) => {
+  if (helpers.validateUUID(id)) {
+    const room = Rooms.get(rid)
+    if (room.host === id) {
+      const user = Rooms.getPlayer(room, kid)
+      if (user) {
+        leaveRoom({ socket: user.socket, io })({ id: user.id, rid })
+        socket.emit('kicked-user')
+      }
+    }
+  }
+}
+
+const closeRoom = ({ socket, io }) => ({ id, rid }) => {
+  if (helpers.validateUUID(id)) {
+    const room = Rooms.get(rid)
+    if (room.host === id) {
+      room.players.forEach(({ socket, id }) => {
+        leaveRoom({ socket, io })({ rid, id })
+      })
+      socket.emit('closed-room')
+    }
+  }
+}
+
+const disconnectUser = ({ socket, io }) => () => {
+  logInfo.socketDisconnect({ sid: socket.id })
+  const user = Users.findBy({ socket })
+  if (user) {
+    const fiveMinutes = 300000
+    const canceller = setTimeout(() => {
+      user.rooms.forEach(rid => {
+        leaveRoom({ socket, io })({ id: user.id, rid })
+      })
+    }, fiveMinutes)
+    Users.addCanceller(user.id, canceller)
+  }
+}
+
 io.on('connection', socket => {
+  console.log('connect with socket', socket.id)
   logInfo.socketConnect({ sid: socket.id })
   socket.on('enter-room', enterRoom({ socket, io }))
   socket.on('create-room', createRoom({ socket, io }))
+  socket.on('close-room', closeRoom({ socket, io }))
   socket.on('leave-room', leaveRoom({ socket, io }))
   socket.on('action', broadcastAction)
   socket.on('dashboard', logInfo.sendDataToDashboard({ socket }))
-  socket.on('disconnect', () => logInfo.socketDisconnect({ sid: socket.id }))
+  socket.on('kick', kick({ socket, io }))
+  socket.on('disconnect', disconnectUser({ socket, io }))
   socket.on('state', broadcastState)
 })
 

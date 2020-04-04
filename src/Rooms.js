@@ -61,6 +61,21 @@ const addPlayer = (room, player) => {
   }
 }
 
+const removePlayer = (room, player) => {
+  room.players = room.players.filter(({ id }) => id !== player.id)
+}
+
+const newHost = room => {
+  if (room) {
+    const [player] = room.players
+    if (player) {
+      room.host = player.id
+    } else {
+      unset(room.id)
+    }
+  }
+}
+
 module.exports = {
   all,
   set,
@@ -73,4 +88,6 @@ module.exports = {
   roomToSerializable,
   getPlayer,
   addPlayer,
+  removePlayer,
+  newHost,
 }
