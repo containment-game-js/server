@@ -120,9 +120,11 @@ const broadcastAction = ({ id, rid, action }) => {
     }
     const room = Rooms.get(rid)
     const player = Rooms.getPlayer(room, id)
-    const host = Rooms.getPlayer(room, room.host)
-    if (room && player && host) {
-      host.socket.emit('action', { id, action })
+    if (room && player) {
+      const host = Rooms.getPlayer(room, room.host)
+      if (host) {
+        host.socket.emit('action', { id, action })
+      }
     }
   }
 }
