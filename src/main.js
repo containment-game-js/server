@@ -144,7 +144,8 @@ const kick = ({ socket, io }) => ({ id, rid, kid }) => {
       const user = Rooms.getPlayer(room, kid)
       if (user) {
         leaveRoom({ socket: user.socket, io })({ id: user.id, rid })
-        socket.emit('kicked-user')
+        socket.emit('kicked-user', { id: user.id })
+        user.socket.emit('kicked')
       }
     }
   }
@@ -156,6 +157,7 @@ const closeRoom = ({ socket, io }) => ({ id, rid }) => {
     if (room.host === id) {
       room.players.forEach(({ socket, id }) => {
         leaveRoom({ socket, io })({ rid, id })
+        socket.emit('kicked')
       })
       socket.emit('closed-room')
     }
