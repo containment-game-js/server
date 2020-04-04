@@ -10,6 +10,7 @@ const helpers = require('./helpers')
 const logInfo = require('./dashboard')
 
 const nolog = process.env.NOLOG
+
 if (!nolog) {
   logInfo.start()
 }
@@ -45,18 +46,13 @@ const createRoom = ({ socket, io }) => ({ name, id, privateRoom }) => {
     Users.set({ socket, id, name })
     const rid = uuidv4()
     const roomName = faker.hacker.noun()
+    const players = [{ socket, id, name }]
     Rooms.set(rid, {
       id: rid,
       host: id,
       name: roomName,
       privateRoom,
-      players: [
-        {
-          socket,
-          id,
-          name,
-        },
-      ],
+      players,
     })
     console.log(`Create room ${rid}`)
     socket.join(rid)
