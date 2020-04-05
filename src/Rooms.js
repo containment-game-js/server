@@ -16,9 +16,12 @@ const roomToSerializable = room => {
   return { ...room, players }
 }
 
-const toSerializable = () => {
-  const privateRooms = all().filter(room => !room.privateRoom)
-  return privateRooms.map(roomToSerializable)
+const toSerializable = id => {
+  const publicRooms = all().filter(
+    room => room.host === id || !room.privateRoom
+  )
+  console.log(publicRooms)
+  return publicRooms.map(roomToSerializable)
 }
 
 const set = (rid, value) => {

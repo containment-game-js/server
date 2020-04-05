@@ -26,7 +26,8 @@ app.get('/', (req, res) => {
 })
 
 app.get('/get-rooms', (req, res) => {
-  const rooms = Rooms.toSerializable()
+  const { id } = req.query
+  const rooms = Rooms.toSerializable(id)
   res.send(rooms)
 })
 
