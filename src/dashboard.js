@@ -115,7 +115,7 @@ const endGame = ({ rid, sids }) => {
 const sendDataToDashboard = ({ socket, io }) => () => {
   const interval = setInterval(() => {
     socket.emit('info', getStats())
-  }, 1000)
+  }, 10000)
   socket.on('disconnect', () => clearInterval(interval))
 }
 
