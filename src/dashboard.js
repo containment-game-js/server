@@ -51,7 +51,7 @@ const leaveRoom = ({ sid, rid }) => {
 
 const socketConnect = ({ sid }) => {
   const now = Date.now()
-  sockets.push({ sid, createdAt: now, updatedAt: now })
+  sockets.push({ sid, createdAt: now, updatedAt: now, connected: true })
   occupation.idle.push(sid)
 }
 
@@ -62,9 +62,12 @@ const socketDisconnect = ({ sid }) => {
   occupation.idle = occupation.idle.filter(id => id !== sid)
 }
 
-const socketUpdate = ({ sid }) => {
+const socketUpdate = ({ sid, connected = true }) => {
   const socket = sockets.find(s => s.sid === sid)
-  if (socket) socket.updatedAt = Date.now()
+  if (socket) {
+    socket.updatedAt = Date.now()
+    socket.connected = connected
+  }
 }
 
 const updateRoom = ({ rid }) => {
