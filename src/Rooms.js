@@ -16,9 +16,11 @@ const roomToSerializable = room => {
   return { ...room, players }
 }
 
-const toSerializable = () => {
-  const privateRooms = all().filter(room => !room.privateRoom)
-  return privateRooms.map(roomToSerializable)
+const toSerializable = id => {
+  const publicRooms = all().filter(
+    room => room.host === id || !room.privateRoom
+  )
+  return publicRooms.map(roomToSerializable)
 }
 
 const set = (rid, value) => {
@@ -61,6 +63,21 @@ const addPlayer = (room, player) => {
   }
 }
 
+const removePlayer = (room, player) => {
+  room.players = room.players.filter(({ id }) => id !== player.id)
+}
+
+const newHost = room => {
+  if (room) {
+    const [player] = room.players
+    if (player) {
+      room.host = player.id
+    } else {
+      unset(room.id)
+    }
+  }
+}
+
 module.exports = {
   all,
   set,
@@ -73,4 +90,6 @@ module.exports = {
   roomToSerializable,
   getPlayer,
   addPlayer,
+  removePlayer,
+  newHost,
 }
