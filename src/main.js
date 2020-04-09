@@ -129,7 +129,11 @@ const broadcastState = ({ id, to, rid, state }) => {
       }
       if (to) {
         const receiver = Rooms.getPlayer(room, to)
-        receiver.socket.emit('state', { state })
+        if (receiver) {
+          receiver.socket.emit('state', { state })
+        } else {
+          console.error('[broadcastState]: receiver not found. to:', to)
+        }
       } else {
         io.to(rid).emit('state', { state })
       }
