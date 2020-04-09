@@ -1,6 +1,8 @@
 const os = require('os')
+const osUtils = require('os-utils')
 const { toSerializable } = require('./Rooms')
 const ram = []
+const cpu = []
 const rooms = []
 const sockets = []
 const occupation = {
@@ -10,21 +12,42 @@ const occupation = {
 }
 
 let interval
-const INTERVAL = 60000
+let cpuInterval
+const RAM_INTERVAL = 60000
+const CPU_INTERVAL = 30000
 
 const start = () => {
   getStats()
-  interval = setInterval(saveRam, INTERVAL)
+  interval = setInterval(saveRam, RAM_INTERVAL)
+  cpuInterval = setInterval(saveCpu, CPU_INTERVAL)
+  saveRam()
+  saveCpu()
 }
-const stop = () => clearInterval(interval)
+
+const stop = () => {
+  clearInterval(interval)
+  clearInterval(cpuInterval)
+}
 
 const getStats = () => ({
+  cpu,
   ram,
   rooms,
   sockets,
   occupation,
   roomInfo: toSerializable(),
 })
+
+const getCpu = () => {
+  return new Promise(resolve => {
+    osUtils.cpuUsage(resolve)
+  })
+}
+
+const saveCpu = async () => {
+  const value = await getCpu()
+  cpu.push([Date.now(), value])
+}
 
 const getRam = () => (os.totalmem() - os.freemem()) / 1024 / 1024 / 1024
 
