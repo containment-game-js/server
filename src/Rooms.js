@@ -20,7 +20,6 @@ const toSerializable = id => {
   const publicRooms = all().filter(
     room => room.host === id || !room.privateRoom
   )
-  console.log(publicRooms)
   return publicRooms.map(roomToSerializable)
 }
 
