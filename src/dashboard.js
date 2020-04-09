@@ -116,6 +116,7 @@ const sendDataToDashboard = ({ socket, io }) => () => {
   const interval = setInterval(() => {
     socket.emit('info', getStats())
   }, 10000)
+  socket.emit('info', getStats())
   socket.on('disconnect', () => clearInterval(interval))
 }
 
