@@ -158,7 +158,7 @@ const kick = ({ socket, io }) => ({ id, rid, kid }) => {
 const closeRoom = ({ socket, io }) => ({ id, rid }) => {
   if (helpers.validateUUID(id)) {
     const room = Rooms.get(rid)
-    if (room.host === id) {
+    if (room && room.host === id) {
       room.players.forEach(({ socket, id }) => {
         leaveRoom({ socket, io })({ rid, id })
         socket.emit('kicked')
