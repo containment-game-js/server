@@ -182,16 +182,26 @@ const disconnectUser = ({ socket, io }) => () => {
   }
 }
 
+const avoidError = handler => async (...params) => {
+  try {
+    const result = await handler(...params)
+    return result
+  } catch (error) {
+    console.error(error.stack)
+    console.error(error)
+  }
+}
+
 io.on('connection', socket => {
   logInfo.socketConnect({ sid: socket.id })
-  socket.on('enter-room', enterRoom({ socket, io }))
-  socket.on('create-room', createRoom({ socket, io }))
-  socket.on('close-room', closeRoom({ socket, io }))
-  socket.on('leave-room', leaveRoom({ socket, io }))
-  socket.on('action', broadcastAction)
-  socket.on('dashboard', logInfo.sendDataToDashboard({ socket }))
-  socket.on('kick', kick({ socket, io }))
-  socket.on('disconnect', disconnectUser({ socket, io }))
+  socket.on('enter-room', avoidError(enterRoom({ socket, io })))
+  socket.on('create-room', avoidError(createRoom({ socket, io })))
+  socket.on('close-room', avoidError(closeRoom({ socket, io })))
+  socket.on('leave-room', avoidError(leaveRoom({ socket, io })))
+  socket.on('action', avoidError(broadcastAction))
+  socket.on('dashboard', avoidError(logInfo.sendDataToDashboard({ socket })))
+  socket.on('kick', avoidError(kick({ socket, io })))
+  socket.on('disconnect', avoidError(disconnectUser({ socket, io })))
   socket.on('state', broadcastState)
 })
 
