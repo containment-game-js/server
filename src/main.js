@@ -202,7 +202,7 @@ io.on('connection', socket => {
   socket.on('dashboard', avoidError(logInfo.sendDataToDashboard({ socket })))
   socket.on('kick', avoidError(kick({ socket, io })))
   socket.on('disconnect', avoidError(disconnectUser({ socket, io })))
-  socket.on('state', broadcastState)
+  socket.on('state', avoidError(broadcastState))
 })
 
 const port = process.env.PORT || 3030
