@@ -129,7 +129,11 @@ const broadcastState = ({ id, to, rid, state }) => {
       }
       if (to) {
         const receiver = Rooms.getPlayer(room, to)
-        receiver.socket.emit('state', { state })
+        if (receiver) {
+          receiver.socket.emit('state', { state })
+        } else {
+          console.error('[broadcastState]: receiver not found. to:', to)
+        }
       } else {
         io.to(rid).emit('state', { state })
       }
@@ -154,7 +158,7 @@ const kick = ({ socket, io }) => ({ id, rid, kid }) => {
 const closeRoom = ({ socket, io }) => ({ id, rid }) => {
   if (helpers.validateUUID(id)) {
     const room = Rooms.get(rid)
-    if (room.host === id) {
+    if (room && room.host === id) {
       room.players.forEach(({ socket, id }) => {
         leaveRoom({ socket, io })({ rid, id })
         socket.emit('kicked')
@@ -178,17 +182,27 @@ const disconnectUser = ({ socket, io }) => () => {
   }
 }
 
+const avoidError = handler => async (...params) => {
+  try {
+    const result = await handler(...params)
+    return result
+  } catch (error) {
+    console.error(error.stack)
+    console.error(error)
+  }
+}
+
 io.on('connection', socket => {
   logInfo.socketConnect({ sid: socket.id })
-  socket.on('enter-room', enterRoom({ socket, io }))
-  socket.on('create-room', createRoom({ socket, io }))
-  socket.on('close-room', closeRoom({ socket, io }))
-  socket.on('leave-room', leaveRoom({ socket, io }))
-  socket.on('action', broadcastAction)
-  socket.on('dashboard', logInfo.sendDataToDashboard({ socket }))
-  socket.on('kick', kick({ socket, io }))
-  socket.on('disconnect', disconnectUser({ socket, io }))
-  socket.on('state', broadcastState)
+  socket.on('enter-room', avoidError(enterRoom({ socket, io })))
+  socket.on('create-room', avoidError(createRoom({ socket, io })))
+  socket.on('close-room', avoidError(closeRoom({ socket, io })))
+  socket.on('leave-room', avoidError(leaveRoom({ socket, io })))
+  socket.on('action', avoidError(broadcastAction))
+  socket.on('dashboard', avoidError(logInfo.sendDataToDashboard({ socket })))
+  socket.on('kick', avoidError(kick({ socket, io })))
+  socket.on('disconnect', avoidError(disconnectUser({ socket, io })))
+  socket.on('state', avoidError(broadcastState))
 })
 
 const port = process.env.PORT || 3030
