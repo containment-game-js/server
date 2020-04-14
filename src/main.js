@@ -9,6 +9,11 @@ const Users = require('./Users')
 const helpers = require('./helpers')
 const logInfo = require('./dashboard')
 
+const MAX_CONNECTIONS =
+  process.env.NODE_ENV === 'development'
+    ? undefined
+    : process.env.MAX_CONNECTIONS || 100
+
 const nolog = process.env.NOLOG
 
 if (!nolog) {
@@ -207,6 +212,7 @@ io.on('connection', socket => {
 
 const port = process.env.PORT || 3030
 
+server.maxConnections = MAX_CONNECTIONS
 server.listen(port, () => {
   console.log(`Listening on ${port}`)
 })
