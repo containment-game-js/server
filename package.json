@@ -8,7 +8,7 @@
     "Arthur Escriou <arthurescriou@gmail.com>"
   ],
   "scripts": {
-    "dev": "nodemon src/main.js",
+    "dev": "NODE_ENV=development nodemon src/main.js",
     "start": "node src/main.js"
   },
   "dependencies": {
